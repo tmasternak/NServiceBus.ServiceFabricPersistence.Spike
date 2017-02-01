@@ -9,28 +9,66 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistenceService", "Persi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Endpoint", "Endpoint\Endpoint.csproj", "{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ServiceFabric", "ServiceFabric", "{ABF7A2AF-87E2-4786-A163-44EB026A805D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{B094B202-9AD2-41E9-A68A-0B060CA4ED86}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExternalEndpoint", "ExternalEndpoint\ExternalEndpoint.csproj", "{60E315E3-9417-4B03-A13A-A81DF163911B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messages", "Messages\Messages.csproj", "{E2EE6E4A-F3A5-4E5F-A13E-462EBC3C934B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Debug|x64.ActiveCfg = Debug|x64
 		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Debug|x64.Build.0 = Debug|x64
 		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Debug|x64.Deploy.0 = Debug|x64
+		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Release|Any CPU.ActiveCfg = Release|x64
 		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Release|x64.ActiveCfg = Release|x64
 		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Release|x64.Build.0 = Release|x64
 		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Release|x64.Deploy.0 = Release|x64
+		{6E66EB64-BBDF-4043-9B04-4CF5D5C0D45C}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{6E66EB64-BBDF-4043-9B04-4CF5D5C0D45C}.Debug|x64.ActiveCfg = Debug|x64
 		{6E66EB64-BBDF-4043-9B04-4CF5D5C0D45C}.Debug|x64.Build.0 = Debug|x64
+		{6E66EB64-BBDF-4043-9B04-4CF5D5C0D45C}.Release|Any CPU.ActiveCfg = Release|x64
 		{6E66EB64-BBDF-4043-9B04-4CF5D5C0D45C}.Release|x64.ActiveCfg = Release|x64
 		{6E66EB64-BBDF-4043-9B04-4CF5D5C0D45C}.Release|x64.Build.0 = Release|x64
+		{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B}.Debug|x64.ActiveCfg = Debug|x64
 		{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B}.Debug|x64.Build.0 = Debug|x64
+		{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B}.Release|Any CPU.ActiveCfg = Release|x64
 		{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B}.Release|x64.ActiveCfg = Release|x64
 		{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B}.Release|x64.Build.0 = Release|x64
+		{60E315E3-9417-4B03-A13A-A81DF163911B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60E315E3-9417-4B03-A13A-A81DF163911B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60E315E3-9417-4B03-A13A-A81DF163911B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{60E315E3-9417-4B03-A13A-A81DF163911B}.Debug|x64.Build.0 = Debug|Any CPU
+		{60E315E3-9417-4B03-A13A-A81DF163911B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60E315E3-9417-4B03-A13A-A81DF163911B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60E315E3-9417-4B03-A13A-A81DF163911B}.Release|x64.ActiveCfg = Release|Any CPU
+		{60E315E3-9417-4B03-A13A-A81DF163911B}.Release|x64.Build.0 = Release|Any CPU
+		{E2EE6E4A-F3A5-4E5F-A13E-462EBC3C934B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2EE6E4A-F3A5-4E5F-A13E-462EBC3C934B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2EE6E4A-F3A5-4E5F-A13E-462EBC3C934B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E2EE6E4A-F3A5-4E5F-A13E-462EBC3C934B}.Debug|x64.Build.0 = Debug|Any CPU
+		{E2EE6E4A-F3A5-4E5F-A13E-462EBC3C934B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2EE6E4A-F3A5-4E5F-A13E-462EBC3C934B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2EE6E4A-F3A5-4E5F-A13E-462EBC3C934B}.Release|x64.ActiveCfg = Release|Any CPU
+		{E2EE6E4A-F3A5-4E5F-A13E-462EBC3C934B}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F7A02736-17DB-4521-B614-AA1370A3FC74} = {ABF7A2AF-87E2-4786-A163-44EB026A805D}
+		{6E66EB64-BBDF-4043-9B04-4CF5D5C0D45C} = {ABF7A2AF-87E2-4786-A163-44EB026A805D}
+		{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B} = {ABF7A2AF-87E2-4786-A163-44EB026A805D}
+		{60E315E3-9417-4B03-A13A-A81DF163911B} = {B094B202-9AD2-41E9-A68A-0B060CA4ED86}
 	EndGlobalSection
 EndGlobal

@@ -4,8 +4,15 @@ using System.Fabric;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Endpoint.Persistence;
+using Messages;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
+using NServiceBus;
+using NServiceBus.Features;
+using NServiceBus.Persistence;
+using NServiceBus.Routing;
+using AzureStorageQueueTransport = NServiceBus.AzureStorageQueueTransport;
 
 namespace Endpoint
 {
@@ -14,6 +21,7 @@ namespace Endpoint
     /// </summary>
     internal sealed class Endpoint : StatelessService
     {
+
         public Endpoint(StatelessServiceContext context)
             : base(context)
         { }
@@ -33,10 +41,29 @@ namespace Endpoint
         /// <param name="cancellationToken">Canceled when Service Fabric needs to shut down this service instance.</param>
         protected override async Task RunAsync(CancellationToken cancellationToken)
         {
-            // TODO: Replace the following sample code with your own logic 
-            //       or remove this RunAsync override if it's not needed in your service.
-
             long iterations = 0;
+
+            try
+            {
+                var configuration = new EndpointConfiguration("Endpoint");
+
+                configuration.UseTransport<AzureStorageQueueTransport>().ConnectionString(Configuration.ConnectionString);
+
+                configuration.UsePersistence<ServiceFabricPersistence, StorageType.Subscriptions>();
+                configuration.UsePersistence<InMemoryPersistence, StorageType.Timeouts>();
+                configuration.UsePersistence<InMemoryPersistence, StorageType.Sagas>();
+                configuration.UsePersistence<InMemoryPersistence, StorageType.GatewayDeduplication>();
+                configuration.UsePersistence<InMemoryPersistence, StorageType.Outbox>();
+
+
+                configuration.EnableFeature<MessageDrivenSubscriptions>();
+
+                var endpoint = await NServiceBus.Endpoint.Start(configuration);
+            }
+            catch (Exception e)
+            {
+
+            }
 
             while (true)
             {
