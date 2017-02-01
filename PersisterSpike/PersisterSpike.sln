@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{A07B5EB6-E848-4116-A8D0-A826331D98C6}") = "PersisterSpike", "PersisterSpike\PersisterSpike.sfproj", "{F7A02736-17DB-4521-B614-AA1370A3FC74}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistenceService", "PersistenceService\PersistenceService.csproj", "{6E66EB64-BBDF-4043-9B04-4CF5D5C0D45C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Endpoint", "Endpoint\Endpoint.csproj", "{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Debug|x64.ActiveCfg = Debug|x64
+		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Debug|x64.Build.0 = Debug|x64
+		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Debug|x64.Deploy.0 = Debug|x64
+		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Release|x64.ActiveCfg = Release|x64
+		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Release|x64.Build.0 = Release|x64
+		{F7A02736-17DB-4521-B614-AA1370A3FC74}.Release|x64.Deploy.0 = Release|x64
+		{6E66EB64-BBDF-4043-9B04-4CF5D5C0D45C}.Debug|x64.ActiveCfg = Debug|x64
+		{6E66EB64-BBDF-4043-9B04-4CF5D5C0D45C}.Debug|x64.Build.0 = Debug|x64
+		{6E66EB64-BBDF-4043-9B04-4CF5D5C0D45C}.Release|x64.ActiveCfg = Release|x64
+		{6E66EB64-BBDF-4043-9B04-4CF5D5C0D45C}.Release|x64.Build.0 = Release|x64
+		{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B}.Debug|x64.ActiveCfg = Debug|x64
+		{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B}.Debug|x64.Build.0 = Debug|x64
+		{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B}.Release|x64.ActiveCfg = Release|x64
+		{C2DEC673-2C9C-41F0-B489-E1FB40F0E68B}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
