@@ -98,6 +98,7 @@ namespace PersistenceService
 
                 }
 
+                context.Response.StatusCode = (int) HttpStatusCode.OK;
             }
             catch (Exception ex)
             {

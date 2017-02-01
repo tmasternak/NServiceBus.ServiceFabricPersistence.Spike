@@ -34,7 +34,7 @@ namespace Endpoint.Persistence
 
     internal class ServiceFabricSubscriptionStorage : ISubscriptionStorage
     {
-        public async Task Subscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
+        async Task<string> GetPrimaryReplicaAddress(MessageType messageType)
         {
             // The partitioning scheme of the processing service is a range of integers from 0 - 25.
             // This generates a partition key within that range by converting the first letter of the input name
@@ -48,34 +48,52 @@ namespace Endpoint.Persistence
             // a few lines below.
             // For a complete solution, a retry mechanism is required.
             // For more information, see http://aka.ms/servicefabricservicecommunication
-            var partition = await servicePartitionResolver.ResolveAsync(persistenceServiceUri, partitionKey, CancellationToken.None);
+            var partition =
+                await servicePartitionResolver.ResolveAsync(persistenceServiceUri, partitionKey, CancellationToken.None);
 
             var endpoint = partition.GetEndpoint();
 
             var addresses = JObject.Parse(endpoint.Address);
-            var primaryReplicaAddress = (string)addresses["Endpoints"].First();
+            var primaryReplicaAddress = (string) addresses["Endpoints"].First();
+            return primaryReplicaAddress;
+        }
+
+        public async Task Subscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
+        {
+            var primaryReplicaAddress = await GetPrimaryReplicaAddress(messageType);
 
             var primaryReplicaUriBuilder = new UriBuilder(primaryReplicaAddress);
             primaryReplicaUriBuilder.Query = "action=subscribe";
 
             var requestText = Newtonsoft.Json.JsonConvert.SerializeObject(new { Subscrber = subscriber, MessageType = messageType });
 
-            await httpClient.PostAsync(primaryReplicaUriBuilder.Uri, new StringContent(requestText));
+            var result = await new HttpClient().PostAsync(primaryReplicaUriBuilder.Uri, new StringContent(requestText)).ConfigureAwait(false);
         }
 
-        public Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
+        public async Task Unsubscribe(Subscriber subscriber, MessageType messageType, ContextBag context)
         {
-            throw new NotImplementedException();
+           throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
+        public async Task<IEnumerable<Subscriber>> GetSubscriberAddressesForMessage(IEnumerable<MessageType> messageTypes, ContextBag context)
         {
+            //TODO: iterate through all messageTypes
+            var messageType = messageTypes.First();
+
+            var primaryReplicaAddress = await GetPrimaryReplicaAddress(messageType);
+
+            var primaryReplicaUriBuilder = new UriBuilder(primaryReplicaAddress);
+            primaryReplicaUriBuilder.Query = "action=get-subscriptions";
+
+            var requestText = Newtonsoft.Json.JsonConvert.SerializeObject(new { MessageType = messageType });
+
+            var response = await new HttpClient().PostAsync(primaryReplicaUriBuilder.Uri, new StringContent(requestText));
+
+            //TODO: parse the responses here
             throw new NotImplementedException();
         }
 
         ServicePartitionResolver servicePartitionResolver = ServicePartitionResolver.GetDefault();
         Uri persistenceServiceUri = new Uri(@"fabric:/PersisterSpike/PersistenceService");
-
-        private readonly HttpClient httpClient = new HttpClient();
     }
 }

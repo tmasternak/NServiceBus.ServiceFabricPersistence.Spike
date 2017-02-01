@@ -43,6 +43,7 @@ namespace Endpoint
         protected override async Task RunAsync(CancellationToken cancellationToken)
         {
             long iterations = 0;
+            IEndpointInstance endpoint;
 
             try
             {
@@ -59,11 +60,11 @@ namespace Endpoint
 
                 configuration.EnableFeature<MessageDrivenSubscriptions>();
 
-                var endpoint = await NServiceBus.Endpoint.Start(configuration);
+                endpoint = await NServiceBus.Endpoint.Start(configuration);
             }
             catch (Exception e)
             {
-
+                throw;
             }
 
             while (true)
@@ -72,7 +73,9 @@ namespace Endpoint
 
                 ServiceEventSource.Current.ServiceMessage(this.Context, "Working-{0}", ++iterations);
 
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+
+                //await endpoint.Publish<SampleEvent>(e => e.Id = Guid.NewGuid());
             }
         }
     }
