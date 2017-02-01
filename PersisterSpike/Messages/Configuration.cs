@@ -9,6 +9,6 @@ namespace Messages
 {
     public static class Configuration
     {
-        public static string ConnectionString = "<connection-string>";
+        public static string ConnectionString = "";
     }
 }

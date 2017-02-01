@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Endpoint.Persistence;
 using Messages;
+using Microsoft.ServiceFabric.Services.Client;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
 using NServiceBus;
