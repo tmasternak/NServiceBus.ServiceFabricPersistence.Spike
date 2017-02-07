@@ -41,113 +41,205 @@ namespace ReceiverEndpoint
         public async Task Save(IContainSagaData sagaData, SagaCorrelationProperty correlationProperty, SynchronizedStorageSession session,
             ContextBag context)
         {
-            var dictionary = await stateManager.GetOrAddAsync<IReliableDictionary<String, byte[]>>("sagas");
-            var secondaryIndex = await stateManager.GetOrAddAsync<IReliableDictionary<Guid, string>>("sagas-index");
+            var sagas = await GetSagasDictionary().ConfigureAwait(false);
+            var secondaryIndex = await GetIndexDicitonary().ConfigureAwait(false);
 
-            using (ITransaction tx = stateManager.CreateTransaction())
+            using (var tx = stateManager.CreateTransaction())
             {
-                var key = $"{correlationProperty.Name}_{correlationProperty.Value}";
+                var correlationId = BuildKey(correlationProperty);
 
-                var serializer = new DataContractSerializer(sagaData.GetType());
+                var data = Serialize(sagaData);
 
-                using (var memoryStream = new MemoryStream())
+                var result = await sagas.TryAddAsync(tx, correlationId, data);
+
+                if (result == false)
                 {
-                    serializer.WriteObject(memoryStream, sagaData);
-
-                    var data = memoryStream.ToArray();
-
-                    var result = await dictionary.TryAddAsync(tx, key, data);
-
-                    if (result == false)
-                    {
-                        throw new Exception($"Failed to save new saga data for {correlationProperty.Name}={correlationProperty.Value}");
-                    }
-
-                    result = await secondaryIndex.TryAddAsync(tx, sagaData.Id, key);
-
-                    if (result == false)
-                    {
-                        throw new Exception($"Failed to save index for saga data for {correlationProperty.Name}={correlationProperty.Value}");
-                    }
-
-                    await tx.CommitAsync();
+                    throw new Exception($"Failed to save new saga data for {correlationProperty.Name}='{correlationProperty.Value}'");
                 }
+
+                result = await secondaryIndex.TryAddAsync(tx, sagaData.Id, correlationId);
+
+                if (result == false)
+                {
+                    throw new Exception($"Failed to save index for saga data for {correlationProperty.Name}='{correlationProperty.Value}'");
+                }
+
+                await tx.CommitAsync();
             }
         }
 
         public async Task Update(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
         {
-            var mainData = await stateManager.GetOrAddAsync<IReliableDictionary<String, byte[]>>("sagas");
-            var secondaryIndex = await stateManager.GetOrAddAsync<IReliableDictionary<Guid, string>>("sagas-index");
+            var sagas = await GetSagasDictionary().ConfigureAwait(false);
+            var secondaryIndex = await GetIndexDicitonary().ConfigureAwait(false);
 
-            using (ITransaction tx = stateManager.CreateTransaction())
+            using (var tx = stateManager.CreateTransaction())
             {
-                var indexKey = sagaData.Id;
+                var sagaId = sagaData.Id;
 
-                var correlationIdValue = secondaryIndex.TryGetValueAsync(tx, indexKey, LockMode.Default);
+                var correlationId = await GetCorrelationId(secondaryIndex, tx, sagaId).ConfigureAwait(false);
 
-                if (correlationIdValue.Result.HasValue == false)
+                var data = Serialize(sagaData);
+
+                var previousData = context.Get<Metadata>().SagaData[sagaData.Id];
+
+                var result = await sagas.TryUpdateAsync(tx, correlationId, data, previousData);
+
+                if (result == false)
                 {
-                    throw new Exception("");
+                    throw new Exception($"Optimistic concurrency failure for SagaId='{sagaData.Id}' and CorrelationId='{sagaId}'");
                 }
 
-                var correlationId = correlationIdValue.Result.Value;
-
-                var serializer = new DataContractSerializer(sagaData.GetType());
-
-                using (var memoryStream = new MemoryStream())
-                {
-                    serializer.WriteObject(memoryStream, sagaData);
-
-                    var data = memoryStream.ToArray();
-
-                    var result = await mainData.TryUpdateAsync(tx, correlationId, data, null);
-
-                    if (result == false)
-                    {
-                        throw new Exception($"Failed to update new saga data for sagaId={correlationId}");
-                    }
-
-                    await tx.CommitAsync();
-                }
+                await tx.CommitAsync();
             }
         }
 
-        public Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context) where TSagaData : IContainSagaData
+        public async Task<TSagaData> Get<TSagaData>(Guid sagaId, SynchronizedStorageSession session, ContextBag context) where TSagaData : IContainSagaData
         {
-            throw new NotImplementedException();
-        }
+            var sagas = await GetSagasDictionary().ConfigureAwait(false);
+            var secondaryIndex = await GetIndexDicitonary().ConfigureAwait(false);
 
-        public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context) where TSagaData : IContainSagaData
-        {
-            var dictionary = await stateManager.GetOrAddAsync<IReliableDictionary<String, byte[]>>("sagas");
-
-            using (ITransaction tx = stateManager.CreateTransaction())
+            using (var tx = stateManager.CreateTransaction())
             {
-                var key = $"{propertyName}_{propertyValue}";
+                var correlationId = await secondaryIndex.TryGetValueAsync(tx, sagaId, LockMode.Default).ConfigureAwait(false);
 
-                var result = await dictionary.TryGetValueAsync(tx, key, LockMode.Default);
-
-                if (result.HasValue)
+                if (correlationId.HasValue == false)
                 {
-                    var serializer = new DataContractSerializer(typeof(TSagaData));
-
-                    var sagaData = (TSagaData) serializer.ReadObject(new MemoryStream(result.Value));
-
-                    await tx.CommitAsync();
-
-                    return sagaData;
+                    return default(TSagaData);
                 }
 
-                return default(TSagaData);
+                var sagaData = await sagas.TryGetValueAsync(tx, correlationId.Value, LockMode.Default).ConfigureAwait(false);
+                if (sagaData.HasValue == false)
+                {
+                    throw new Exception($"Failed to update saga data for SagaId='{sagaId}' and CorrelationId='{correlationId.Value}'");
+                }
+
+                return Resolve<TSagaData>(sagaData.Value, context);
             }
         }
 
-        public Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
+        public async Task<TSagaData> Get<TSagaData>(string propertyName, object propertyValue, SynchronizedStorageSession session, ContextBag context)
+            where TSagaData : IContainSagaData
         {
-            throw new NotImplementedException();
+            var dictionary = await GetSagasDictionary().ConfigureAwait(false);
+
+            using (var tx = stateManager.CreateTransaction())
+            {
+                var correlationId = BuildKey(new SagaCorrelationProperty(propertyName, propertyValue));
+
+                var result = await dictionary.TryGetValueAsync(tx, correlationId, LockMode.Default).ConfigureAwait(false);
+
+                return result.HasValue ? Resolve<TSagaData>(result.Value, context) : default(TSagaData);
+            }
         }
 
-        IReliableStateManager stateManager;
+        public async Task Complete(IContainSagaData sagaData, SynchronizedStorageSession session, ContextBag context)
+        {
+            var sagas = await GetSagasDictionary().ConfigureAwait(false);
+            var secondaryIndex = await GetIndexDicitonary().ConfigureAwait(false);
+
+            using (var tx = stateManager.CreateTransaction())
+            {
+                var sagaId = sagaData.Id;
+                var correlationId = await GetCorrelationId(secondaryIndex, tx, sagaId).ConfigureAwait(false);
+
+                await secondaryIndex.TryRemoveAsync(tx, sagaId).ConfigureAwait(false);
+
+                var previouslyExistingState = await sagas.TryRemoveAsync(tx, correlationId).ConfigureAwait(false);
+                if (previouslyExistingState.HasValue == false)
+                {
+                    throw new Exception($"Failed to complete saga data for SagaId='{sagaId}' and CorrelationId='{correlationId}'");
+                }
+
+                var dataAtReading = context.Get<Metadata>().SagaData[sagaId];
+                var dataAtDeletion = previouslyExistingState.Value;
+
+                if (Compare(dataAtReading, dataAtDeletion) == false)
+                {
+                    throw new Exception($"Optimistic concurrency failure for SagaId='{sagaId}' and CorrelationId='{correlationId}'");
+                }
+
+                await tx.CommitAsync().ConfigureAwait(false);
+            }
+        }
+
+        // ReSharper disable once SuggestBaseTypeForParameter
+        static bool Compare(byte[] a1, byte[] a2)
+        {
+            if (ReferenceEquals(a1, a2))
+                return true;
+
+            if (a1 == null || a2 == null)
+                return false;
+
+            if (a1.Length != a2.Length)
+                return false;
+
+            for (var i = 0; i < a1.Length; i++)
+            {
+                if (a1[i] != a2[i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        static async Task<string> GetCorrelationId(IReliableDictionary<Guid, string> secondaryIndex, ITransaction tx, Guid indexKey)
+        {
+            var correlationIdValue = await secondaryIndex.TryGetValueAsync(tx, indexKey, LockMode.Default).ConfigureAwait(false);
+
+            if (correlationIdValue.HasValue == false)
+            {
+                throw new Exception($"Can't look up saga by its SagaId='{indexKey}'");
+            }
+
+            return correlationIdValue.Value;
+        }
+
+        static TSagaData Resolve<TSagaData>(byte[] data, ContextBag context)
+            where TSagaData : IContainSagaData
+        {
+            var serializer = new DataContractSerializer(typeof(TSagaData));
+            using (var ms = new MemoryStream(data))
+            {
+                var saga = (TSagaData)serializer.ReadObject(ms);
+
+                context.GetOrCreate<Metadata>().SagaData[saga.Id] = data;
+
+                return saga;
+            }
+        }
+
+        static string BuildKey(SagaCorrelationProperty correlationProperty)
+        {
+            return $"{correlationProperty.Name}_{correlationProperty.Value}";
+        }
+
+        Task<IReliableDictionary<string, byte[]>> GetSagasDictionary()
+        {
+            return stateManager.GetOrAddAsync<IReliableDictionary<string, byte[]>>("sagas");
+        }
+
+        Task<IReliableDictionary<Guid, string>> GetIndexDicitonary()
+        {
+            return stateManager.GetOrAddAsync<IReliableDictionary<Guid, string>>("sagas-index");
+        }
+
+        static byte[] Serialize(IContainSagaData sagaData)
+        {
+            var serializer = new DataContractSerializer(sagaData.GetType());
+            using (var ms = new MemoryStream())
+            {
+                serializer.WriteObject(ms, sagaData);
+                return ms.ToArray();
+            }
+        }
+
+        readonly IReliableStateManager stateManager;
+
+        class Metadata
+        {
+            public readonly Dictionary<Guid, byte[]> SagaData = new Dictionary<Guid, byte[]>();
+        }
     }
 }
